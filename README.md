@@ -8,6 +8,7 @@
 - disconnect : 클라이언트가 연결 해제
 
 패킷 구조
+|
 클라이언트가 서버에 송신할 때 : userId, clentVersion, handlerId, payload
 서버가 클라이언트에 송신할 때 : 
 
