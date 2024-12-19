@@ -3,6 +3,10 @@ import Ammo from './Ammo.js';
 class AmmoController {
 	ammos = [];
 	hitAmmos = [];
+	upgrade = 1;
+
+	MIN_UPGRADE = 1;
+	MAX_UPGRADE = 5;
 
 	constructor(ctx, x, y, scaleRatio, speed) {
 		this.ctx = ctx;
@@ -16,6 +20,8 @@ class AmmoController {
 		this.newImage = new Image();
 		this.newImage.src = 'images/ammo/ammo_1.png';
 		this.ammoImage = this.newImage;
+
+		//this.weaponUpgrade();
 	}
 
 	getRandomNumber(min, max) {
@@ -26,9 +32,12 @@ class AmmoController {
 		//const index = this.getRandomNumber(0, this.cactiImages.length - 1);
 		//const cactusImage = this.cactiImages[index];
 
-		const ammo = new Ammo(this.ctx, x, y, this.ammoImage.width, this.ammoImage.height, this.ammoImage);
-
-		this.ammos.push(ammo);
+		for(let i=0; i<this.upgrade; i++){
+			const diff = Math.floor((i+1)/2)*(i%2?-1:1)*10;
+			const newY = y + diff;
+			const ammo = new Ammo(this.ctx, x, newY, this.ammoImage.width, this.ammoImage.height, this.ammoImage);
+			this.ammos.push(ammo);
+		}
 	}
 
 	update(gameSpeed, deltaTime) {
@@ -76,6 +85,17 @@ class AmmoController {
 	reset() {
 		this.ammos = [];
 		this.hitAmmos = [];
+	}
+
+	weaponUpgrade() {
+		console.log('업그레이드!', this.upgrade);
+		this.upgrade++;
+		if(this.upgrade>this.MAX_UPGRADE) this.upgrade = this.MAX_UPGRADE;
+	}
+
+	downgrade(){
+		this.upgrade--;
+		if(this.upgrade<this.MIN_UPGRADE) this.upgrade = this.MIN_UPGRADE;
 	}
 }
 

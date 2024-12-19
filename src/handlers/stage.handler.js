@@ -2,11 +2,10 @@ import { getStage, setStage } from '../models/stage.model.js';
 import { getGameAssets } from '../init/assets.js';
 import { clearScore } from '../models/score.model.js';
 
-// 클라이언트에서 호출 sendEvent(11, payload : { currentStage: 1000, targetStage: 1001 })
+// sendEvent(11, payload : { currentStage: 1000 })
 export const moveStageHandler = (userId, payload) => {
 	// 유저의 현재 스테이지 배열을 가져오고, 최대 스테이지 ID를 찾는다.
 	let currentStages = getStage(userId);
-	console.log(`[stage.handler.js]currentStages:${currentStages}`);
 	if (!currentStages.length) {
 		return { status: 'fail', message: '[stage.handler.js]No stages found for user' };
 	}
@@ -34,27 +33,23 @@ export const moveStageHandler = (userId, payload) => {
 	//     return { status: 'fail', message: '[stage.handler.js]Invalid elapsed time :', elapsedTime };
 	// }
 
-	// 올클?
-	if (payload.targetStage > 1006) {
-		return { responseId: 12, status: 'all clear' };
-	}
-
 	// 게임 에셋에서 다음 스테이지의 존재 여부 확인
 	const { stages, items, enemies, itemUnlocks } = getGameAssets();
-	if (!stages.data.some(stage => stage.id === payload.targetStage)) {
+	const targetStage = payload.currentStage+1
+	if (!stages.data.some(stage => stage.id === targetStage)) {
 		return { status: 'fail', message: '[stage.handler.js]Target stage does not exist... stages :' };
 	}
 
-	const stageInfo = Object.values(stages.data).find(stage => stage.id === payload.targetStage);
+	const stageInfo = Object.values(stages.data).find(stage => stage.id === targetStage);
 
-    const unlockItemIds = Object.values(itemUnlocks.data).find(unlockInfo => (unlockInfo.stage_id === payload.targetStage)).item_id;
-    const unlockEnemyIds = Object.values(itemUnlocks.data).find(unlockInfo => (unlockInfo.stage_id === payload.targetStage)).enemy_id;
+    const unlockItemIds = Object.values(itemUnlocks.data).find(unlockInfo => (unlockInfo.stage_id === targetStage)).item_id;
+    const unlockEnemyIds = Object.values(itemUnlocks.data).find(unlockInfo => (unlockInfo.stage_id === targetStage)).enemy_id;
 
     const unlockItemDatas = Object.values(items.data).filter(item => unlockItemIds.includes(item.id));
     const unlockEnemyDatas = Object.values(enemies.data).filter(enemy => unlockEnemyIds.includes(enemy.id));
     
 	// 유저의 다음 스테이지 정보 업데이트 + 현재 시간
-	setStage(userId, payload.targetStage, serverTime);
+	setStage(userId, targetStage, serverTime);
 	return {
 		responseId: 11,
 		status: 'success',

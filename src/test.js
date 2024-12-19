@@ -9,5 +9,12 @@ const grades = {
 const sortedGrades = Object.entries(grades).sort((a,b)=>b[1]-a[1]);
 const winner = Object.entries(grades).sort((a,b)=>b[1]-a[1])[0];
 
-console.log(sortedGrades);
-console.log(winner);
+//console.log(sortedGrades);
+//console.log(winner);
+
+let test = { 'testId': { highScore:0 }, 'testHighId': { highScore:220 } }
+
+console.log(test['testId']);
+console.log(test['testId'].highScore);
+
+

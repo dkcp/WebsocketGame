@@ -265,6 +265,16 @@ class Player {
 		this.speedUpTimer = this.SPEED_UP_TIMER;
 	}
 
+	// 무기 업그레이드 아이템을 먹었을 때때
+	weaponUpgrade(){
+		try {
+			this.ammoController.weaponUpgrade();
+		} catch (error) {
+			console.log(error);
+			console.log(this.ammoController);
+		}
+	}
+
 	//캐릭터 그림 업데이트
 	setImage(gameSpeed, deltaTime) {
 		if (this.walkAnimationTimer <= 0) {

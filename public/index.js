@@ -178,7 +178,6 @@ function gameLoop(currentTime) {
 	// 선인장 충돌
 	if (!gameover && cactiController.collideWith(player)) {
 		let cactiYposition = cactiController;
-		score.setHighScore();
 		player.hit();
 	}
 
@@ -192,7 +191,8 @@ function gameLoop(currentTime) {
 		if (player.hp <= 0 && !gameover) {
 			gameover = true;
 			setupGameReset();
-			sendEvent(51, { score:Math.floor(score.score) });
+			//gameEnd
+			sendEvent(3, { score:Math.floor(score.score) });
 		}
 	}
 
@@ -253,6 +253,10 @@ export function playerHpUp() {
 
 export function playerSpeedUp() {
     player.speedUp();
+}
+
+export function playerWeaponUpgrade() {
+    player.weaponUpgrade();
 }
 
 export function setHighScore(highScore){

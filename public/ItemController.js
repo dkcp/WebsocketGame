@@ -2,8 +2,8 @@ import Item from './Item.js';
 import { sendEvent } from './Socket.js';
 
 class ItemController {
-	INTERVAL_MIN = 6000;
-	INTERVAL_MAX = 12000;
+	INTERVAL_MIN = 3000;
+	INTERVAL_MAX = 6000;
 
 	nextInterval = null;
 	items = [];
@@ -17,13 +17,10 @@ class ItemController {
 		6: new Image(),
 		17: new Image(),
 		18: new Image(),
+		19: new Image(),
 	};
 
-	unlockedItems = [
-		{ id:1, score:10 },
-		{ id:17, score:0 },
-		{ id:18, score:0 },
-	]
+	unlockedItems = []
 
 	collidedItems = [];
 
@@ -39,6 +36,7 @@ class ItemController {
 			this.itemImages[i].src = 'images/items/pokeball_'+i+'.png';
 		this.itemImages[17].src = 'images/items/item_potion.png';
 		this.itemImages[18].src = 'images/items/item_boots.png';
+		this.itemImages[19].src = 'images/items/item_upgrade.png';
 
 		this.setNextItemTime();
 	}
@@ -102,11 +100,6 @@ class ItemController {
 
 	reset() {
 		this.items = [];
-		this.unlockedItems = [
-			{ id:1, score:10 },
-			{ id:17, score:0 },
-			{ id:18, score:0 },
-		];
 	}
 
 	unlockItem(unlockItems){

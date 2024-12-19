@@ -25,7 +25,7 @@ const cleanupRedis = async () => {
 
 const getRedis = async (key) => {
     initRedis();
-    const value = await redisClient.get('highScore');
+    const value = await redisClient.get(key);
 
     return value;
 }

@@ -3,14 +3,14 @@ import Enemy from './Enemy.js';
 class EnemyController {
 	INTERVAL_MIN = 3000;
 	INTERVAL_MAX = 4000;
-	SPACESHIP_COUNT = 5;
+	SPACESHIP_COUNT = 7;
 
 	nextInterval = null;
 
 	spaceshipImages = [];
 	spaceshipHitImages = [];
 
-	unlockedEnemies = [{ id: 1, score: 10, size: 80, hp: 3, speed: 1 }];
+	unlockedEnemies = [];
 
 	constructor(ctx, scaleRatio, speed) {
 		this.ctx = ctx;
@@ -32,16 +32,15 @@ class EnemyController {
 	}
 
 	createEnemy() {
-		const imageIndex = this.getRandomNumber(0, this.SPACESHIP_COUNT - 1);
-		const typeIndex = this.getRandomNumber(0, this.unlockedEnemies.length - 1);
+		const index = this.getRandomNumber(0, this.unlockedEnemies.length - 1);
 		const x = this.canvas.width * 1.5;
 		const y = this.getRandomNumber(10, this.canvas.height - 110);
 
 		const enemy = new Enemy(
 			this.ctx,
-			this.spaceshipImages[imageIndex],
-			this.spaceshipHitImages[imageIndex],
-			this.unlockedEnemies[typeIndex],
+			this.spaceshipImages[index],
+			this.spaceshipHitImages[index],
+			this.unlockedEnemies[index],
 			this.scaleRatio,
 		);
 		this.enemies.push(enemy);
@@ -74,7 +73,6 @@ class EnemyController {
 
 	reset() {
 		this.enemies = [];
-		this.unlockedEnemies = [{ id: 1, score: 10, size: 80, hp: 3, speed: 1 }];
 	}
 
 	unlockEnemy(unlockEnemies) {

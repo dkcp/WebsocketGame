@@ -50,7 +50,7 @@ class Enemy {
 		this.setImage(gameSpeed, deltaTime);
 
         // 큰 몹의 움직임
-		if (this.width / scaleRatio > 390) {
+		if (this.id===7) {
 			this.directionX
 				? (this.x += (speed * gameSpeed * deltaTime * scaleRatio) / 4)
 				: (this.x -= (speed * gameSpeed * deltaTime * scaleRatio) / 4);
@@ -120,6 +120,9 @@ class Enemy {
 				if (this.explosionImageIndex >= this.explosionImages.length) {
 					this.explosionImageIndex = this.explosionImages.length;
 					this.isDie = true;
+					if(this.id===7){
+						sendEvent(52, {})
+					}
 				}
 			}
 

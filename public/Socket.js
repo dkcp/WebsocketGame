@@ -6,11 +6,13 @@ import {
 	setStageInfo,
 	unlockEnemy,
 	unlockItem,
-	setHighScore
+	setHighScore,
+	playerWeaponUpgrade
 } from './index.js';
 import Score from './Score.js';
 
-const socket = io('http://43.201.107.19:3000/', {
+//const socket = io('http://43.201.107.19:3000/', {
+const socket = io('http://localhost:3000/', {
 	query: {
 		clientVersion: CLIENT_VERSION
 	}
@@ -23,6 +25,8 @@ socket.on('response', data => {
 		switch (data.responseId) {
 			case 2: //start game
 				setStageInfo(data.stageInfo);
+				unlockEnemy(data.unlockEnemyDatas);
+				unlockItem(data.unlockItemDatas);
 				break;
 			case 3: //end game
 				break;
@@ -41,14 +45,14 @@ socket.on('response', data => {
 				playerSpeedUp();
 				break;
 			case 19: // weapon upgrade
-				// #구현해라
+				playerWeaponUpgrade();
 				break;
 			case 21: // enemy score
 				updateScore(data.updatedScore);
 				break;
 			case 51: //game over
 				setStageInfo(data.stageInfo);
-				setHighScore(data.highScore);
+				if(data.message) console.log(data.message);
 				break;
 			case 52: //all clear
 				console.log('올클리어 이벤트(서버콜)');
@@ -58,25 +62,18 @@ socket.on('response', data => {
 				break;
 		}
 	} else {
-		console.log('이벤트 처리 실패 메시지 : ', data.responseId);
+		console.log('----------------------------');
+		console.log('이벤트 처리 실패', data);
+		console.log('----------------------------');
 	}
 });
 
 socket.on('connection', data => {
-	const user = window.localStorage.getItem('client');
-	if (user) {
-		console.log('connection: ', data);
-		console.log(`로컬 유저 확인 완료. ${user}`);
-		userId = user;
-	} else {
-		console.log('connection: ', data);
-		userId = data.uuid;
-		window.localStorage.setItem('client', userId);
-		console.log(`로컬에 유저가 없습니다. ${userId}`);
-	}
-
-	if (data.highRecord) {
-		console.log('최고점수:', data.highRecord);
+	console.log('connection: ', data);
+	userId = data.uuid;
+	
+	if (data.highScore) {
+		setHighScore(data.highScore);
 	}
 });
 
@@ -89,11 +86,12 @@ const sendEvent = (handlerId, payload) => {
 	});
 };
 
-socket.on('broadcast', data => {
-	Score.setHighScore(data.broadcase[1]);
-	if (data.highRecord) {
-		console.log('최고점수:', data.highRecord);
+// 최고기록 브로드캐스트
+socket.on('updateHighScore', data => {
+	if (data.newHighScore) {
+		console.log('새로운 최고점수:', data.newHighScore);
 	}
+	setHighScore(data.newHighScore);
 });
 
 export { sendEvent };

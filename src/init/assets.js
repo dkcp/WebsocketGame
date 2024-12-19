@@ -1,13 +1,13 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { redisClient } from '../utils/redisClient.js';
+import { getRedis, initRedis, redisClient, setRedis } from '../utils/redisClient.js';
 
-const __filename = fileURLToPath(import.meta.url); //C:\Users\DW\Documents\NodeJS\sparta\websocketGame\src\init\assets.js
-const __dirname = path.dirname(__filename); //C:\Users\DW\Documents\NodeJS\sparta\websocketGame\src\init
-const basePath = path.join(__dirname, '../../assets'); //C:\Users\DW\Documents\NodeJS\sparta\websocketGame\assets
-const basename = path.basename(__filename);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const basePath = path.join(__dirname, '../../assets');
 let gameAssets = {};
+let records = {};
 
 const readFileAsync = (filename) => {
     return new Promise((resolve, reject) => {
@@ -21,7 +21,6 @@ const readFileAsync = (filename) => {
     });
 };
 
-// listening 포트로 established될 때 실행
 export const loadGameAssets = async () => {
     try {
 
@@ -33,13 +32,16 @@ export const loadGameAssets = async () => {
         ]);
         gameAssets = { stages, items, enemies, itemUnlocks };
 
-        await redisClient.connect();
-        await redisClient.set('gameAssets', JSON.stringify(gameAssets));
-        gameAssets = JSON.parse(await redisClient.get('gameAssets'));
-        await redisClient.set('highScore', 0)
-        await redisClient.quit();
+        await initRedis();
+        await redisClient.flushAll();
 
-        return gameAssets;
+        await setRedis('gameAssets', JSON.stringify(gameAssets));
+        gameAssets = JSON.parse(await getRedis('gameAssets'));
+
+        await setRedis('records', JSON.stringify({ 'testId': { highScore:0 }, 'testHighId': { highScore:10 } }));
+        records = JSON.parse(await getRedis('records'));
+
+        return { gameAssets, records };
     } catch (error) {
         throw new Error(`Failed to load game assets. ${error.message}`);
     }
@@ -48,4 +50,13 @@ export const loadGameAssets = async () => {
 export const getGameAssets = () => {
     return gameAssets;
 };
+
+export const getRecords = () => {
+    return records;
+}
+
+export const updateRecords = async () => {
+    records = JSON.parse(await redisClient.get('records'));
+}
+
 

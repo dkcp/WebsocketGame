@@ -9,16 +9,19 @@ export const getItemScore = (uuid, payload) => {
     if(recent_timestamp===null) recent_timestamp = payload.timestamp;
     else {
         const elapsedTime = (payload.timestamp - recent_timestamp)/1000;
-        if(elapsedTime<5) return { status: 'fail', message: '아이템 너무 빨리 먹어서 어뷰징 아닌가 의심됨' };
+        if(elapsedTime<3) return { status: 'fail', message: '아이템 너무 빨리 먹어서 어뷰징 아닌가 의심됨' };
     }
 
-    const { stages, items } = getGameAssets();
+    const { items } = getGameAssets();
 
     //payload.item_id 가 현재 스테이지에서 unlock된 id 맞나?
 
     if(payload.item_id<7){
-        const score = items.data.find(item=> item.id === payload.item_id).score;
-    
+        const item = items.data.find(item=> item.id === payload.item_id);
+        if (!item) {
+            return { status: 'fail', message: `item not found` };
+        }
+        const score = item.score;
         if (!score) {
             return { status: 'fail', message: `get item score fail` };
         }
@@ -35,17 +38,22 @@ export const getItemScore = (uuid, payload) => {
     }
   };
 
-
 // sendEvent(21, { enemy_id })
 export const getEnemyScore = (uuid, payload) => {
-    const { stages, enemies } = getGameAssets();
-    const score = enemies.data.find(enemy=> enemy.id === payload.enemy_id).score;
-
+    const { enemies } = getGameAssets();
+    const enemy = enemies.data.find(enemy=> enemy.id === payload.enemy_id);
+    if( !enemy){
+        return { status: 'fail', message: `enemy_id not found` };
+    }
+    const score = enemy.score;
     if (!score) {
         return { status: 'fail', message: `get enemy score fail` };
     }
 
     const updatedScore = addScore(uuid, score);
+    if(payload.enemy_id!==7){
+        return { responseId: 21, status: 'success', updatedScore };
+    }else
+        return { responseId: 52, status: 'success', updatedScore };
 
-    return { responseId: 21, status: 'success', updatedScore };
 };

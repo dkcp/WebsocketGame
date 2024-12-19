@@ -11,8 +11,8 @@ export const getStage = (uuid) => {
 };
 
 export const setStage = (uuid, targetStageId, timestamp) => {
-    console.log(`유저 스테이지 갱신 : ${stages}`);
     stages[uuid].push({ id:targetStageId, timestamp});
+    console.log(`유저 스테이지 갱신 : ${stages}`);
     return targetStageId;
 };
 
