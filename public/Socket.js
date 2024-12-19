@@ -10,7 +10,7 @@ import {
 } from './index.js';
 import Score from './Score.js';
 
-const socket = io('http://localhost:3000', {
+const socket = io('http://43.201.107.19:3000/', {
 	query: {
 		clientVersion: CLIENT_VERSION
 	}
