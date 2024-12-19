@@ -1,3 +1,5 @@
+import { sendEvent } from "./Socket.js";
+
 class Enemy {
 	ANIMATION_TIMER = 200;
 	AnimationTimer = this.ANIMATION_TIMER;
@@ -13,6 +15,7 @@ class Enemy {
 	isIdle = false;
 	isAttack = false;
 	isHit = false;
+	isExploded = false;
 	isDie = false;
 
 	constructor(ctx, image, hitImage, enemyType, scaleRatio) {
@@ -27,6 +30,7 @@ class Enemy {
 		this.hp = enemyType.hp;
 		this.score = enemyType.score;
 		this.moveSpeed = enemyType.speed;
+		this.id = enemyType.id;
 
 		for (let i = 1; i <= 10; i++) {
 			const newImage = new Image();
@@ -66,7 +70,7 @@ class Enemy {
 					this.isSpawn = false;
 					this.isIdle = true;
 				}
-				// 출현 후후 움직임
+				// 출현 후 움직임
 			} else if (this.isIdle) {
 				if (this.directionY) {
 					this.y += this.moveSpeed * speed * gameSpeed * scaleRatio * this.spawnSpeed;
@@ -98,6 +102,10 @@ class Enemy {
 		this.isHit = true;
 		this.hitFrameIndex = 0;
 		this.hp--;
+		if(this.hp<=0 && !this.isExploded) {
+			this.isExploded = true;
+			sendEvent(21, { enemy_id:this.id });
+		}
 		return this.hp;
 	}
 
@@ -106,7 +114,7 @@ class Enemy {
 			// 그림 너비 조절
 
 			// 에네미 그림 업데이트
-			if (this.hp <= 0) {
+			if (this.isExploded) {
 				this.image = this.explosionImages[this.explosionImageIndex];
 				this.explosionImageIndex++;
 				if (this.explosionImageIndex >= this.explosionImages.length) {
@@ -134,6 +142,8 @@ class Enemy {
 	}
 
 	collideWith(sprite) {
+		if(this.isExploded) return false;
+
 		const adjustBy = 1.4;
 		const isCollide =
 			this.x < sprite.x + sprite.width / adjustBy &&

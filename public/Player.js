@@ -56,7 +56,7 @@ class Player {
 		this.xStandingPosition = this.x;
 
 		this.standingStillImage = new Image();
-		this.standingStillImage.src = 'images/bear_move_1.png';
+		this.standingStillImage.src = 'images/player/bear_move_1.png';
 		this.image = this.standingStillImage;
 		this.gunfireImage = new Image();
 		this.gunfireImage.src = 'images/effect/gun_fire_1.png';
@@ -70,21 +70,21 @@ class Player {
 		//곰돌이
 		for (let i = 1; i <= 6; i++) {
 			const moveImage = new Image();
-			moveImage.src = 'images/bear_move_' + i + '.png';
+			moveImage.src = 'images/player/bear_move_' + i + '.png';
 			this.Images.moveImages.push(moveImage);
 		}
 		for (let i = 1; i <= 3; i++) {
 			const hitImage = new Image();
-			hitImage.src = 'images/bear_hit_' + i + '.png';
+			hitImage.src = 'images/player/bear_hit_' + i + '.png';
 			this.Images.hitImages.push(hitImage);
 		}
 		for (let i = 1; i <= 6; i++) {
 			const dashImage = new Image();
-			dashImage.src = 'images/bear_dash_' + i + '.png';
+			dashImage.src = 'images/player/bear_dash_' + i + '.png';
 			this.Images.dashImages.push(dashImage);
 		}
         const dieImage = new Image();
-        dieImage.src = 'images/bear_die.png';
+        dieImage.src = 'images/player/bear_die.png';
         this.Images.dieImage = dieImage;
 
 		this.ammoController = new AmmoController(ctx, this.x, this.y, scaleRatio, this.AMMO_SPEED);
@@ -234,18 +234,7 @@ class Player {
 		this.move(deltaTime);
 	}
 
-	// 신발 아이템 먹었을 때
-	speedUp() {
-		this.MOVE_SPEED += 1;
-		this.DASH_SPEED += 5;
-		if (this.MOVE_SPEED > this.MAX_SPEED) {
-			this.MOVE_SPEED = this.MAX_SPEED;
-		}
-
-		this.speedUpTimer = this.SPEED_UP_TIMER;
-	}
-
-	//선인장 collide()에서 호출
+	// Enemy와 충돌했을 때
 	hit() {
 		if (!this.isHit) {
 			this.hp--;
@@ -258,10 +247,22 @@ class Player {
 		}
 	}
 
-	recover() {
+	// 물약 먹었을 때
+	hpUp() {
 		if (this.hp + 1 <= this.MAX_HP) {
 			this.hp++;
 		}
+	}
+
+	// 신발 아이템 먹었을 때
+	speedUp() {
+		this.MOVE_SPEED += 1;
+		this.DASH_SPEED += 5;
+		if (this.MOVE_SPEED > this.MAX_SPEED) {
+			this.MOVE_SPEED = this.MAX_SPEED;
+		}
+
+		this.speedUpTimer = this.SPEED_UP_TIMER;
 	}
 
 	//캐릭터 그림 업데이트

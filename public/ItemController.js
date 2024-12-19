@@ -1,7 +1,8 @@
 import Item from './Item.js';
+import { sendEvent } from './Socket.js';
 
 class ItemController {
-	INTERVAL_MIN = 0;
+	INTERVAL_MIN = 6000;
 	INTERVAL_MAX = 12000;
 
 	nextInterval = null;
@@ -14,14 +15,14 @@ class ItemController {
 		4: new Image(),
 		5: new Image(),
 		6: new Image(),
-		11: new Image(),
-		12: new Image(),
+		17: new Image(),
+		18: new Image(),
 	};
 
 	unlockedItems = [
 		{ id:1, score:10 },
-		{ id:11, score:0 },
-		{ id:12, score:0 },
+		{ id:17, score:0 },
+		{ id:18, score:0 },
 	]
 
 	collidedItems = [];
@@ -36,8 +37,8 @@ class ItemController {
 
 		for(let i=1; i<=6; i++)
 			this.itemImages[i].src = 'images/items/pokeball_'+i+'.png';
-		this.itemImages[11].src = 'images/items/item_potion.png';
-		this.itemImages[12].src = 'images/items/item_boots.png';
+		this.itemImages[17].src = 'images/items/item_potion.png';
+		this.itemImages[18].src = 'images/items/item_boots.png';
 
 		this.setNextItemTime();
 	}
@@ -72,13 +73,17 @@ class ItemController {
 		this.items.forEach(item => item.draw());
 		this.collidedItems.forEach((collidedItem, index) => {
 			if(collidedItem.timer>0){
-				const score = this.unlockedItems.find(item=>item.id===collidedItem.id).score;
-				if(score>0){
-					this.ctx.font = `bolder 20px serif`;
-					this.ctx.fillStyle = '#dddd00';
-					this.ctx.fillText('+'+score, collidedItem.x, collidedItem.y);
-					collidedItem.y-=0.5;
-					collidedItem.timer--;
+				try {
+					const score = this.unlockedItems.find(item=>item.id===collidedItem.id).score;
+					if(score>0){
+						this.ctx.font = `bolder 20px serif`;
+						this.ctx.fillStyle = '#dddd00';
+						this.ctx.fillText('+'+score, collidedItem.x, collidedItem.y);
+						collidedItem.y-=0.5;
+						collidedItem.timer--;
+					}
+				} catch (error) {
+					console.log(error.message, this.unlockedItems);
 				}
 			}else this.collidedItems.splice(index, 1);
 		});
@@ -91,32 +96,21 @@ class ItemController {
 
 			this.ctx.clearRect(collidedItem.x, collidedItem.y, collidedItem.width, collidedItem.height);
 
-			if(collidedItem.id < 6){
-			}
-			if(collidedItem.id === 11){
-				player.recover();
-			}
-			if(collidedItem.id === 12){
-				player.speedUp();
-			}
-
-
-			return {
-				itemId: collidedItem.id,
-				score: this.unlockedItems.find(item=>item.id===collidedItem.id).score,
-			};
+			sendEvent(16, { item_id: collidedItem.id, timestamp: Date.now() });
 		}
 	}
 
 	reset() {
 		this.items = [];
+		this.unlockedItems = [
+			{ id:1, score:10 },
+			{ id:17, score:0 },
+			{ id:18, score:0 },
+		];
 	}
 
 	unlockItem(unlockItems){
-		unlockItems.forEach(unlockItem => {
-			const isExist = this.unlockedItems.find(unlockedItem => unlockedItem.id === unlockItem.id);
-			if(!isExist) this.unlockedItems.push(unlockItem);
-		})
+		this.unlockedItems = unlockItems;
 	}
 
 	setNextItemTime() {

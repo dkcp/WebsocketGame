@@ -12,7 +12,7 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 
 const GAME_SPEED_START = 1;
-const GAME_SPEED_INCREMENT = 0.00001;
+const GAME_TIME_PER_STAGE = 100000;
 
 // 게임 크기
 const GAME_WIDTH = 1200;
@@ -26,27 +26,16 @@ const PLAYER_HEIGHT = 94 / 1.5; // 62
 // 배경
 const BACKGROUND_WIDTH = GAME_WIDTH;
 const BACKGROUND_HEIGHT = GAME_HEIGHT;
-
-// 땅
-const GROUND_WIDTH = 2400;
-const GROUND_HEIGHT = 24;
-const GROUND_SPEED = 0.5;
+const BACKGROUND_SPEED = 0.5;
 
 let stageLevel = 1;
+let gameTimer = GAME_TIME_PER_STAGE;
 
 // 선인장
 const CACTI_CONFIG = [
 	{ width: 48 / 1.5, height: 100 / 1.5, image: 'images/cactus_1.png' },
 	{ width: 98 / 1.5, height: 100 / 1.5, image: 'images/cactus_2.png' },
 	{ width: 68 / 1.5, height: 70 / 1.5, image: 'images/cactus_3.png' }
-];
-
-// 아이템
-const ITEM_CONFIG = [
-	{ width: 50 / 1.5, height: 50 / 1.5, id: 1, image: 'images/items/pokeball_red.png' },
-	{ width: 50 / 1.5, height: 50 / 1.5, id: 2, image: 'images/items/pokeball_yellow.png' },
-	{ width: 50 / 1.5, height: 50 / 1.5, id: 3, image: 'images/items/pokeball_purple.png' },
-	{ width: 50 / 1.5, height: 50 / 1.5, id: 4, image: 'images/items/pokeball_cyan.png' }
 ];
 
 // 게임 요소들
@@ -62,7 +51,7 @@ let scaleRatio = null;
 let previousTime = null;
 let gameSpeed = GAME_SPEED_START;
 let gameover = false;
-let stageClear = false;
+let gameClear = false;
 let hasAddedEventListenersForRestart = false;
 let waitingToStart = true;
 
@@ -77,7 +66,7 @@ function createSprites() {
 	const backGroundHeightInGame = BACKGROUND_HEIGHT * scaleRatio;
 
 	player = new Player(ctx, playerWidthInGame, playerHeightInGame, scaleRatio);
-	background = new BackGround(ctx, backGroundWidthInGame, backGroundHeightInGame, GROUND_SPEED, scaleRatio);
+	background = new BackGround(ctx, backGroundWidthInGame, backGroundHeightInGame, BACKGROUND_SPEED, scaleRatio);
 
 	const cactiImages = CACTI_CONFIG.map(cactus => {
 		const image = new Image();
@@ -89,9 +78,9 @@ function createSprites() {
 		};
 	});
 
-	enemyController = new EnemyController(ctx, scaleRatio, GROUND_SPEED);
-	cactiController = new CactiController(ctx, cactiImages, scaleRatio, GROUND_SPEED);
-	itemController = new ItemController(ctx, scaleRatio, GROUND_SPEED);
+	enemyController = new EnemyController(ctx, scaleRatio, BACKGROUND_SPEED);
+	cactiController = new CactiController(ctx, cactiImages, scaleRatio, BACKGROUND_SPEED);
+	itemController = new ItemController(ctx, scaleRatio, BACKGROUND_SPEED);
 
 	score = new Score(ctx, scaleRatio);
     ui = new Ui(ctx, scaleRatio, score);
@@ -119,6 +108,16 @@ function setScreen() {
 setScreen();
 window.addEventListener('resize', setScreen);
 
+function setupGameReset() {
+	if (!hasAddedEventListenersForRestart) {
+		hasAddedEventListenersForRestart = true;
+
+		setTimeout(() => {
+			window.addEventListener('keyup', reset, { once: true });
+		}, 1000);
+	}
+}
+
 if (screen.orientation) {
 	screen.orientation.addEventListener('change', setScreen);
 }
@@ -127,7 +126,6 @@ function reset() {
 	hasAddedEventListenersForRestart = false;
 	gameover = false;
 	waitingToStart = false;
-	stageClear = false;
 
 	player.reset();
 	background.reset();
@@ -139,39 +137,7 @@ function reset() {
 	sendEvent(2, { timestamp: Date.now(), currentStageId: score.currentStageId }); //#gameStart
 }
 
-function moveStageReset() {
-	hasAddedEventListenersForRestart = false;
-	gameover = false;
-	waitingToStart = false;
-	stageClear = false;
-
-	enemyController.reset();
-	itemController.reset();
-	gameSpeed = GAME_SPEED_START;
-	sendEvent(2, { timestamp: Date.now(), currentStageId: score.currentStageId }); //#gameStart
-}
-
 window.addEventListener('keyup', reset, { once: true });
-
-function setupGameReset() {
-	if (!hasAddedEventListenersForRestart) {
-		hasAddedEventListenersForRestart = true;
-
-		setTimeout(() => {
-			window.addEventListener('keyup', reset, { once: true });
-		}, 1000);
-	}
-}
-
-function setupMoveStageReset() {
-	if (!hasAddedEventListenersForRestart) {
-		hasAddedEventListenersForRestart = true;
-
-		setTimeout(() => {
-			window.addEventListener('keyup', moveStageReset, { once: true });
-		}, 1000);
-	}
-}
 
 function clearScreen() {
 	//ctx.fillStyle = 'white';
@@ -196,16 +162,15 @@ function gameLoop(currentTime) {
 
 	if (!gameover && !waitingToStart) {
 		// update
-		if (!stageClear) {
-			background.update(gameSpeed, deltaTime);
-			// 선인장
-			cactiController.update(gameSpeed, deltaTime);
-			itemController.update(gameSpeed, deltaTime);
-			// 달리기
-			enemyController.update(gameSpeed, deltaTime);
+		
+		background.update(gameSpeed, deltaTime);
+		// 선인장
+		cactiController.update(gameSpeed, deltaTime);
+		itemController.update(gameSpeed, deltaTime);
+		// 달리기
+		enemyController.update(gameSpeed, deltaTime);
 
-			score.update(deltaTime);
-		}
+		score.update(deltaTime);
 		player.ammoController.update(gameSpeed, deltaTime);
 		player.update(gameSpeed, deltaTime, background);
 	}
@@ -218,26 +183,21 @@ function gameLoop(currentTime) {
 	}
 
 	// 아이템 충돌
-	const collideWithItem = itemController.collideWith(player);
-	if (collideWithItem) {
-		//&& collideWithItem.itemId
-		score.getItem(collideWithItem.score);
-	}
+	itemController.collideWith(player);
 
-	// 에네미 충돌
+	// 적과의 충돌
 	const collideWithEnemy = enemyController.collideWith(player);
 	if (collideWithEnemy) {
 		player.hit();
-	}
-
-	if (player.hp <= 0) {
-		gameover = true;
-		setupGameReset();
+		if (player.hp <= 0 && !gameover) {
+			gameover = true;
+			setupGameReset();
+			sendEvent(51, { score:Math.floor(score.score) });
+		}
 	}
 
 	// 총알과 적 충돌
-	const enemyScore = player.ammoController.collideWithEnemies(enemyController);  //충돌한 적의 점수
-    if(enemyScore>0) score.killEnemy(enemyScore);
+	player.ammoController.collideWithEnemies(enemyController);
 
 	// draw
 	background.draw();
@@ -253,27 +213,10 @@ function gameLoop(currentTime) {
 
 	if (gameover) {
 		showGameOver();
-        if(showGameOverTimer>=0){
-            showCountDown(Math.ceil(showGameOverTimer/1000));
-            showGameOverTimer -= deltaTime;
-        }else {
-            console.log('게임 끝');
-        }
 	}
 
 	if (waitingToStart) {
 		showStartGameText();
-	}
-
-	if (stageClear) {
-		showStageClearText();
-
-		if (showStageClearTimer < 0) {
-			showStartGameText();
-			setupMoveStageReset();
-		} else {
-			showStageClearTimer -= deltaTime;
-		}
 	}
 
 	// 재귀 호출 (무한반복)
@@ -283,28 +226,69 @@ function gameLoop(currentTime) {
 // 게임 프레임을 다시 그리는 메서드
 requestAnimationFrame(gameLoop);
 
-
-
-let showStageClearTimer = 5000;
-let showGameOverTimer = 5000;
-
-// socket.js에서 호출
-export function setStageClear() {
-	stageClear = true;
-	showStageClearTimer = 5000;
-	setupGameReset();
-}
-
 export function setStageInfo(stageInfo) {
     gameSpeed = stageInfo.gameSpeed;
 	score.setStageInfo(stageInfo);
 	stageLevel = stageInfo.level;
+	enemyController.setTimerByStage(stageInfo.level);
+	gameTimer = GAME_TIME_PER_STAGE;
 }
 
-export function unlockEnemy(unlockEnemys) {
-    enemyController.unlockEnemy(unlockEnemys);
+export function unlockEnemy(unlockEnemies) {
+    enemyController.unlockEnemy(unlockEnemies);
 }
 
 export function unlockItem(unlockItems) {
     itemController.unlockItem(unlockItems);
+}
+
+export function updateScore(updatedScore) {
+	console.log(updatedScore);
+    score.updateScore(updatedScore);
+}
+
+export function playerHpUp() {
+    player.hpUp();
+}
+
+export function playerSpeedUp() {
+    player.speedUp();
+}
+
+export function setHighScore(highScore){
+	score.setHighScore(highScore);
+}
+
+function showGameOver() {
+	const fontSize = 70 * scaleRatio;
+	ctx.font = `${fontSize}px Verdana`;
+	ctx.fillStyle = '#ff3040';
+	const x = canvas.width / 2 - fontSize*4;
+	const y = canvas.height / 2;
+	ctx.fillText('GAME OVER', x, y);
+}
+
+function showCountDown(countNum){
+	const fontSize = 50 * scaleRatio;
+	ctx.font = `${fontSize}px Verdana`;
+	ctx.fillStyle = '#ff3040';
+	const x = canvas.width / 2 - fontSize / 2;
+	const y = canvas.height / 1.5;
+	ctx.fillText(`${countNum}`, x, y);
+}
+
+function showStartGameText() {
+	const fontSize = 40 * scaleRatio;
+	ctx.font = `${fontSize}px Verdana`;
+	ctx.fillStyle = 'grey';
+	const x = canvas.width / 6;
+	const y = canvas.height / 1.5;
+	ctx.fillText('Tap Screen or Press Space To Start', x, y);
+}
+
+function showClearText() {
+	const fontSize = 100 * scaleRatio;
+	ctx.font = `bolder ${fontSize}px Verdana`;
+	ctx.fillStyle = '#ff8000';
+	ctx.fillText('ALL STAGE CLEAR!', canvas.width / 4.5, canvas.height / 2);
 }

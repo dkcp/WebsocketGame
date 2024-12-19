@@ -4,10 +4,9 @@ class Score {
     highScore = 0;
     score = 0;
     HIGH_SCORE_KEY = 'highScore';
-    stageChange = true;
     stageLevel = 0;
     currentStageId = 1000;
-    targetScore = 100;
+    targetScore = 60;
     stageText = 1;
 
     targetStageId = 1001;
@@ -23,17 +22,12 @@ class Score {
         this.currentStageId = stageInfo.id;
         this.targetScore = stageInfo.score;
         this.targetStageId = this.currentStageId+1;
+        this.stageText = stageInfo.level;
     }
 
     update(deltaTime) {
-        //this.score += deltaTime * 0.001 * this.scorePerSecond * 0.1;    // 빼
-
-        // 점수가 100점 이상이 될 시 서버에 메세지 전송
-        if (Math.floor(this.score) >= this.targetScore && this.stageChange) {
-            this.stageChange = false;
+        if (Math.floor(this.score) >= this.targetScore) {
             sendEvent(11, { currentStage: this.currentStageId, targetStage: this.targetStageId }); //moveStage(userId, payload)
-        } else {
-            //console.log('[update time]', this.score); //#시간체크... 좀 이상함
         }
     }
 
@@ -41,24 +35,20 @@ class Score {
 
     }
 
-    getItem(score) {
-        this.score += score;
-    }
-    
-    killEnemy(score) {
-        this.score += score;
+    updateScore(updatedScore) {
+        this.score = updatedScore;
+        console.log('현재점수:',this.score, '목표점수:', this.targetScore);
     }
 
     reset() {
         this.score = 0;
-        this.stageChange = true;
-        this.stageText = this.currentStageId-999;
     }
 
-    setHighScore() {
-        const highScore = Number(localStorage.getItem(this.HIGH_SCORE_KEY));
-        if (this.score > highScore) {
-            localStorage.setItem(this.HIGH_SCORE_KEY, Math.floor(this.score));
+    setHighScore(highScore) {
+        const localHighScore = Number(localStorage.getItem(this.HIGH_SCORE_KEY));
+        if (highScore > localHighScore) {
+            localStorage.setItem(this.HIGH_SCORE_KEY, Math.floor(highScore));
+            console.log('최고점수 갱신');
         }
     }
 

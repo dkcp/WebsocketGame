@@ -1,4 +1,4 @@
-import Enemy from "./Enemy.js";
+import Enemy from './Enemy.js';
 
 class EnemyController {
 	INTERVAL_MIN = 3000;
@@ -10,22 +10,20 @@ class EnemyController {
 	spaceshipImages = [];
 	spaceshipHitImages = [];
 
-	unlockedEnemys = [
-		{ id:1, score:10, size:80, hp:3, speed:1 },
-	];
+	unlockedEnemies = [{ id: 1, score: 10, size: 80, hp: 3, speed: 1 }];
 
-	constructor(ctx, scaleRatio, ground_speed) {
+	constructor(ctx, scaleRatio, speed) {
 		this.ctx = ctx;
 		this.canvas = ctx.canvas;
 		this.scaleRatio = scaleRatio;
-		this.ground_speed = ground_speed;
+		this.speed = speed;
 		this.enemies = [];
 
-		for(let i=1; i<=this.SPACESHIP_COUNT; i++){
+		for (let i = 1; i <= this.SPACESHIP_COUNT; i++) {
 			const spaceshipImage = new Image();
 			const spaceshipHitImage = new Image();
-			spaceshipImage.src = 'images/enemy/spaceship_'+i+'.png';
-			spaceshipHitImage.src = 'images/enemy/spaceship_'+i+'_hit.png';
+			spaceshipImage.src = 'images/enemy/spaceship_' + i + '.png';
+			spaceshipHitImage.src = 'images/enemy/spaceship_' + i + '_hit.png';
 			this.spaceshipImages.push(spaceshipImage);
 			this.spaceshipHitImages.push(spaceshipHitImage);
 		}
@@ -35,12 +33,17 @@ class EnemyController {
 
 	createEnemy() {
 		const imageIndex = this.getRandomNumber(0, this.SPACESHIP_COUNT - 1);
-		const typeIndex = this.getRandomNumber(0, this.unlockedEnemys.length - 1);
+		const typeIndex = this.getRandomNumber(0, this.unlockedEnemies.length - 1);
 		const x = this.canvas.width * 1.5;
 		const y = this.getRandomNumber(10, this.canvas.height - 110);
 
-		const enemy = new Enemy(this.ctx, this.spaceshipImages[imageIndex], this.spaceshipHitImages[imageIndex], 
-			this.unlockedEnemys[typeIndex], this.scaleRatio);
+		const enemy = new Enemy(
+			this.ctx,
+			this.spaceshipImages[imageIndex],
+			this.spaceshipHitImages[imageIndex],
+			this.unlockedEnemies[typeIndex],
+			this.scaleRatio,
+		);
 		this.enemies.push(enemy);
 	}
 
@@ -54,10 +57,10 @@ class EnemyController {
 
 		// 각 객체의 좌표,이미지 업데이트
 		this.enemies.forEach(enemy => {
-			enemy.update(this.ground_speed, gameSpeed, deltaTime, this.scaleRatio);
+			enemy.update(this.speed, gameSpeed, deltaTime, this.scaleRatio);
 		});
 
-		this.enemies = this.enemies.filter(enemy => (enemy.x > -enemy.width && !enemy.isDie) );
+		this.enemies = this.enemies.filter(enemy => enemy.x > -enemy.width && !enemy.isDie);
 	}
 
 	draw() {
@@ -65,25 +68,17 @@ class EnemyController {
 	}
 
 	collideWith(sprite) {
-		const collidedItem = this.enemies.find(item => item.collideWith(sprite));
-		// if (collidedItem) {
-		// 	this.ctx.clearRect(collidedItem.x, collidedItem.y, collidedItem.width, collidedItem.height);
-		// 	return {
-		// 		itemId: collidedItem.id
-		// 	};
-		// }
-        return this.enemies.some(cactus => cactus.collideWith(sprite));
+		const collidedItem = this.enemies.find(enemy => enemy.collideWith(sprite));
+		return this.enemies.some(enemy => enemy.collideWith(sprite));
 	}
 
 	reset() {
 		this.enemies = [];
+		this.unlockedEnemies = [{ id: 1, score: 10, size: 80, hp: 3, speed: 1 }];
 	}
 
-	unlockEnemy(unlockEnemys){
-		unlockEnemys.forEach(unlockEnemy => {
-			const isExist = this.unlockedEnemys.find(unlockedEnemy => unlockedEnemy.id === unlockEnemy.id);
-			if(!isExist) this.unlockedEnemys.push(unlockEnemy);
-		})
+	unlockEnemy(unlockEnemies) {
+		this.unlockedEnemies = unlockEnemies;
 	}
 
 	setNextEnemyTime() {
@@ -92,6 +87,11 @@ class EnemyController {
 
 	getRandomNumber(min, max) {
 		return Math.floor(Math.random() * (max - min + 1) + min);
+	}
+
+	setTimerByStage(stageLevel) {
+		this.INTERVAL_MIN = 1000 - (stageLevel*100);
+		this.INTERVAL_MAX = 2000 - (stageLevel*200);
 	}
 }
 

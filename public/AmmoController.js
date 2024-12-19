@@ -53,15 +53,11 @@ class AmmoController {
 		});
 	}
 
-	collideWith(sprite) {
-		return this.cacti.some(cactus => cactus.collideWith(sprite));
-	}
-
 	collideWithEnemies(enemyController) {
 		let enemyScore = 0;
 		this.ammos.forEach((ammo, ammoIndex) => {
 			enemyController.enemies.forEach((enemy) => {
-				if (ammo.collideWith(enemy)) {
+				if (enemy.collideWith(ammo)) {
 					// 총알 충돌 처리
 					ammo.hit();
 					this.hitAmmos.push(ammo);

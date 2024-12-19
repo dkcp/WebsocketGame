@@ -1,5 +1,6 @@
 import { getStage, setStage } from '../models/stage.model.js';
 import { getGameAssets } from '../init/assets.js';
+import { clearScore } from '../models/score.model.js';
 
 // 클라이언트에서 호출 sendEvent(11, payload : { currentStage: 1000, targetStage: 1001 })
 export const moveStageHandler = (userId, payload) => {
@@ -35,11 +36,11 @@ export const moveStageHandler = (userId, payload) => {
 
 	// 올클?
 	if (payload.targetStage > 1006) {
-		return { handlerId: 12, status: 'all clear' };
+		return { responseId: 12, status: 'all clear' };
 	}
 
 	// 게임 에셋에서 다음 스테이지의 존재 여부 확인
-	const { stages, items, enemys, itemUnlocks } = getGameAssets();
+	const { stages, items, enemies, itemUnlocks } = getGameAssets();
 	if (!stages.data.some(stage => stage.id === payload.targetStage)) {
 		return { status: 'fail', message: '[stage.handler.js]Target stage does not exist... stages :' };
 	}
@@ -49,17 +50,13 @@ export const moveStageHandler = (userId, payload) => {
     const unlockItemIds = Object.values(itemUnlocks.data).find(unlockInfo => (unlockInfo.stage_id === payload.targetStage)).item_id;
     const unlockEnemyIds = Object.values(itemUnlocks.data).find(unlockInfo => (unlockInfo.stage_id === payload.targetStage)).enemy_id;
 
-
     const unlockItemDatas = Object.values(items.data).filter(item => unlockItemIds.includes(item.id));
-    const unlockEnemyDatas = Object.values(enemys.data).filter(enemy => unlockEnemyIds.includes(enemy.id));
-
-    console.log(payload.targetStage, '해금아이템목록', unlockItemDatas);
-    console.log(payload.targetStage, '해금적목록록', unlockEnemyDatas);
+    const unlockEnemyDatas = Object.values(enemies.data).filter(enemy => unlockEnemyIds.includes(enemy.id));
     
 	// 유저의 다음 스테이지 정보 업데이트 + 현재 시간
 	setStage(userId, payload.targetStage, serverTime);
 	return {
-		handlerId: 11,
+		responseId: 11,
 		status: 'success',
 		stageInfo,
 		unlockItemDatas,

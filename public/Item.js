@@ -10,7 +10,6 @@ class Item {
         this.height = height;
         this.image = image;
 
-        console.log(this.x);
     }
 
     update(speed, gameSpeed, deltaTime, scaleRatio) {
